@@ -5,106 +5,67 @@
 import { tool, type ToolSet } from "ai";
 import { z } from "zod/v3";
 
-import type { Chat } from "./server";
-import { getCurrentAgent } from "agents";
-import { scheduleSchema } from "agents/schedule";
-
-/**
- * Weather information tool that requires human confirmation
- * When invoked, this will present a confirmation dialog to the user
- */
-const getWeatherInformation = tool({
-  description: "show the weather in a given city to the user",
-  inputSchema: z.object({ city: z.string() })
-  // Omitting execute function makes this tool require human confirmation
+const USER_AGENT =
+  "AI Weather Chat; sam@gizm0.dev (project for job application)";
+const API_REQUEST_CONFIG = {
+  headers: {
+    Accept: "application/ld+json",
+    "User-Agent": USER_AGENT
+  }
+};
+const zoneResponse = z.object({
+  "@graph": z.array(
+    z.object({
+      id: z.string(),
+      name: z.string()
+    })
+  )
 });
 
-/**
- * Local time tool that executes automatically
- * Since it includes an execute function, it will run without user confirmation
- * This is suitable for low-risk operations that don't need oversight
- */
-const getLocalTime = tool({
-  description: "get the local time for a specified location",
-  inputSchema: z.object({ location: z.string() }),
-  execute: async ({ location }) => {
-    console.log(`Getting local time for ${location}`);
-    return "10am";
+const getZonesInState = tool({
+  description:
+    "get all forecast zones in a specified US state. zone names typically correspond to counties or metropolitan areas",
+  inputSchema: z.object({ state: z.array(z.string().length(2).toUpperCase()) }),
+  execute: async ({ state }) => {
+    const url = new URL("https://api.weather.gov/zones");
+    url.searchParams.set("area", state.join(","));
+    url.searchParams.set("type", "forecast");
+    url.searchParams.set("include_geometry", "false");
+
+    const response = await fetch(url, API_REQUEST_CONFIG);
+    if (!response.ok) {
+      throw new Error(response.statusText);
+    }
+
+    const responseData = await response.json();
+    return zoneResponse.parse(responseData);
   }
 });
 
-const scheduleTask = tool({
-  description: "A tool to schedule a task to be executed at a later time",
-  inputSchema: scheduleSchema,
-  execute: async ({ when, description }) => {
-    // we can now read the agent context from the ALS store
-    const { agent } = getCurrentAgent<Chat>();
-
-    function throwError(msg: string): string {
-      throw new Error(msg);
-    }
-    if (when.type === "no-schedule") {
-      return "Not a valid schedule input";
-    }
-    const input =
-      when.type === "scheduled"
-        ? when.date // scheduled
-        : when.type === "delayed"
-          ? when.delayInSeconds // delayed
-          : when.type === "cron"
-            ? when.cron // cron
-            : throwError("not a valid schedule input");
-    try {
-      agent!.schedule(input!, "executeTask", description);
-    } catch (error) {
-      console.error("error scheduling task", error);
-      return `Error scheduling task: ${error}`;
-    }
-    return `Task scheduled for type "${when.type}" : ${input}`;
-  }
+const forecastResponse = z.object({
+  updated: z.string(),
+  periods: z.array(
+    z.object({
+      number: z.number().int(),
+      name: z.string(),
+      detailedForecast: z.string()
+    })
+  )
 });
-
-/**
- * Tool to list all scheduled tasks
- * This executes automatically without requiring human confirmation
- */
-const getScheduledTasks = tool({
-  description: "List all tasks that have been scheduled",
-  inputSchema: z.object({}),
-  execute: async () => {
-    const { agent } = getCurrentAgent<Chat>();
-
-    try {
-      const tasks = agent!.getSchedules();
-      if (!tasks || tasks.length === 0) {
-        return "No scheduled tasks found.";
-      }
-      return tasks;
-    } catch (error) {
-      console.error("Error listing scheduled tasks", error);
-      return `Error listing scheduled tasks: ${error}`;
+const getZoneForecast = tool({
+  description: "get a text forecast for the next week for the provided zone",
+  inputSchema: z.object({ zone: z.string() }),
+  execute: async ({ zone }) => {
+    const url = new URL(
+      `https://api.weather.gov/zones/forecast/${encodeURIComponent(zone)}/forecast`
+    );
+    const response = await fetch(url, API_REQUEST_CONFIG);
+    if (!response.ok) {
+      throw new Error(response.statusText);
     }
-  }
-});
 
-/**
- * Tool to cancel a scheduled task by its ID
- * This executes automatically without requiring human confirmation
- */
-const cancelScheduledTask = tool({
-  description: "Cancel a scheduled task using its ID",
-  inputSchema: z.object({
-    taskId: z.string().describe("The ID of the task to cancel")
-  }),
-  execute: async ({ taskId }) => {
-    const { agent } = getCurrentAgent<Chat>();
-    try {
-      await agent!.cancelSchedule(taskId);
-      return `Task ${taskId} has been successfully canceled.`;
-    } catch (error) {
-      console.error("Error canceling scheduled task", error);
-      return `Error canceling task ${taskId}: ${error}`;
-    }
+    const responseData = await response.json();
+    return forecastResponse.parse(responseData);
   }
 });
 
@@ -113,11 +74,8 @@ const cancelScheduledTask = tool({
  * These will be provided to the AI model to describe available capabilities
  */
 export const tools = {
-  getWeatherInformation,
-  getLocalTime,
-  scheduleTask,
-  getScheduledTasks,
-  cancelScheduledTask
+  getZonesInState,
+  getZoneForecast
 } satisfies ToolSet;
 
 /**
@@ -126,8 +84,8 @@ export const tools = {
  * Each function here corresponds to a tool above that doesn't have an execute function
  */
 export const executions = {
-  getWeatherInformation: async ({ city }: { city: string }) => {
-    console.log(`Getting weather information for ${city}`);
-    return `The weather in ${city} is sunny`;
-  }
+  // getWeatherInformation: async ({ city }: { city: string }) => {
+  //   console.log(`Getting weather information for ${city}`);
+  //   return `The weather in ${city} is sunny`;
+  // }
 };

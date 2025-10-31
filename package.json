@@ -23,7 +23,7 @@
 		"@biomejs/biome": "^2.2.5",
 		"@cloudflare/vite-plugin": "1.13.12",
 		"@cloudflare/vitest-pool-workers": "^0.9.12",
-		"@cloudflare/workers-types": "^4.20251008.0",
+		"@cloudflare/workers-types": "^4.20251014.0",
 		"@tailwindcss/vite": "^4.1.14",
 		"@types/node": "^24.9.2",
 		"@types/react": "^19.2.2",
@@ -37,7 +37,6 @@
 		"wrangler": "^4.45.3"
 	},
 	"dependencies": {
-		"@ai-sdk/openai": "^2.0.48",
 		"@ai-sdk/react": "^2.0.68",
 		"@ai-sdk/ui-utils": "^1.2.11",
 		"@phosphor-icons/react": "^2.1.10",
