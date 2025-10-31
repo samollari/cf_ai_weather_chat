@@ -65,7 +65,7 @@ const firstRoundMatcher = /(?:[A-Z]{2}, ?)*[A-Z]{2}?/;
 const secondRoundMatcher = /(?:\w{2}, ?)+\w{2}?/i;
 const getForecast = tool({
   description:
-    "get a text-based forecast for a given location. Only supports locations in the United States.",
+    "get a text-based forecast for a given location. Only supports locations in the United States. If the query is ambiguous, this tool may request clarification. In that case, do not immediately call it again, ask the user to clarify the location and try again with more information",
   inputSchema: z.object({ location: z.string() }),
   execute: async ({ location }) => {
     console.log({ location });
@@ -74,6 +74,7 @@ const getForecast = tool({
 Below you will be given some user-provided text describing a location for a weather forecast and are tasked with identifying U.S. state (or multiple nearest states) that location is most likely in.
 If the location is not in the U.S. (for example, "London"), respond only with the text "Not in the U.S."
 If the location is actually in the U.S. (for example, "Kansas City" or "southern Florida"), return a comma-separated list of capitalized two-letter state abbreviations with no spaces, such as "MO,KS" or "FL".
+If you believe the query needs clarification (for example, there are many cities named "Springfield"), respond with the text "Clarify" to request clarification on the location.
 Do not include quotation marks like in the above examples, return the text plain. Do not include any extra text in your response besides what is asked of you above.
 
 User location query: "${location}"`;
@@ -83,6 +84,10 @@ User location query: "${location}"`;
       prompt: stateCodePrompt
     });
     console.log({ text: stateCodeResponse.text }, stateCodeResponse);
+
+    if (stateCodeResponse.text.toLowerCase().startsWith("clarify")) {
+      return "Too many location options available. Please clarify location with user.";
+    }
 
     const firstRoundMatch = firstRoundMatcher.exec(stateCodeResponse.text);
     const matches = new Set(

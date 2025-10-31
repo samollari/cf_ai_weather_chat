@@ -1,7 +1,5 @@
 import { routeAgentRequest, type Schedule } from "agents";
 
-import { getSchedulePrompt } from "agents/schedule";
-
 import { AIChatAgent } from "agents/ai-chat-agent";
 import {
   generateId,
@@ -60,9 +58,8 @@ export class Chat extends AIChatAgent<Env> {
         const result = streamText({
           system: `You are a helpful assistant that can do various tasks... 
 
-${getSchedulePrompt({ date: new Date() })}
-
-If the user asks to schedule a task, use the schedule tool to schedule the task.
+The forecast tool works best with unambiguous place names. If there are many locations that share the same name and it is not clear from context which location the user is asking about, do not call the tool and instead ask the user to clarify.
+If a tool requests clarification, do not immediately attempt to call it again. Reply to the user and ask them for clarification. You may then try again with more information.
 `,
 
           messages: convertToModelMessages(processedMessages),

@@ -146,7 +146,7 @@ export default function Chat() {
               className="text-[#F48120]"
               data-icon="agents"
             >
-              <title>Cloudflare Agents</title>
+              <title>Weather Chat Agent</title>
               <symbol id="ai:local:agents" viewBox="0 0 80 79">
                 <path
                   fill="currentColor"
@@ -158,7 +158,7 @@ export default function Chat() {
           </div>
 
           <div className="flex-1">
-            <h2 className="font-semibold text-base">AI Chat Agent</h2>
+            <h2 className="font-semibold text-base">Weather Chat Agent</h2>
           </div>
 
           <div className="flex items-center gap-2 mr-2">
@@ -208,11 +208,11 @@ export default function Chat() {
                   <ul className="text-sm text-left space-y-2">
                     <li className="flex items-center gap-2">
                       <span className="text-[#F48120]">•</span>
-                      <span>Weather information for any city</span>
+                      <span>Weather information in the next week</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="text-[#F48120]">•</span>
-                      <span>Local time in different locations</span>
+                      <span>Uses National Weather Service APIs, so only U.S. locations are supported</span>
                     </li>
                   </ul>
                 </div>
