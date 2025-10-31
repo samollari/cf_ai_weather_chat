@@ -212,7 +212,10 @@ export default function Chat() {
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="text-[#F48120]">•</span>
-                      <span>Uses National Weather Service APIs, so only U.S. locations are supported</span>
+                      <span>
+                        Uses National Weather Service APIs, so only U.S.
+                        locations are supported
+                      </span>
                     </li>
                   </ul>
                 </div>
@@ -417,4 +420,3 @@ export default function Chat() {
     </div>
   );
 }
-
