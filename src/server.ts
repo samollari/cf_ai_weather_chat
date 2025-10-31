@@ -20,7 +20,7 @@ import { env } from "cloudflare:workers";
 
 const workersai = createWorkersAI({ binding: env.AI });
 // @ts-expect-error idk why but it's not happy
-const model = workersai("@cf/meta/llama-3.3-70b-instruct-fp8-fast");
+export const model = workersai("@cf/meta/llama-3.3-70b-instruct-fp8-fast");
 
 /**
  * Chat Agent implementation that handles real-time AI chat interactions
